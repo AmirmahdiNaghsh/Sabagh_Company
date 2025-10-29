@@ -112,7 +112,8 @@ async function crawlLocalSite() {
     
     for (const file of htmlFiles) {
         try {
-            const filePath = path.join(__dirname, '..', file);
+            // HTML files live in the project root (two levels up from this backend folder)
+            const filePath = path.join(__dirname, '..', '..', file);
             const html = await fs.readFile(filePath, 'utf8');
             const $ = cheerio.load(html);
             
@@ -209,29 +210,66 @@ ${context}
         }
         
         // Call OpenAI REST API via axios (avoid client compatibility issues)
-        const resp = await axios.post(
-            'https://api.openai.com/v1/chat/completions',
-            {
-                model: 'gpt-3.5-turbo',
+        // Build the request body so we can retry if the chosen model rejects some params (e.g., temperature)
+        // Use a broadly supported chat model that accepts temperature
+        const modelName = 'gpt-5';
+            const requestBody = {
+                model: modelName,
                 messages: [
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userPrompt }
                 ],
-                max_tokens: 500,
-                temperature: 0.7
-            },
-            {
+                max_completion_tokens: 500
+            };
+
+            // Some models (for example gpt-5-nano) reject custom temperature values; only include temperature
+            // for models that generally support it (e.g., gpt-3.5-series). This prevents unsupported_value errors.
+            if (!modelName.startsWith('gpt-5')) {
+                requestBody.temperature = 0.7;
+            }
+
+        try {
+            const resp = await axios.post('https://api.openai.com/v1/chat/completions', requestBody, {
                 headers: {
                     'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
                     'Content-Type': 'application/json'
                 }
-            }
-        );
+            });
 
-        const completion = resp.data;
-        return completion.choices && completion.choices[0] && completion.choices[0].message
-            ? completion.choices[0].message.content
-            : '';
+            const completion = resp.data;
+            return completion.choices && completion.choices[0] && completion.choices[0].message
+                ? completion.choices[0].message.content
+                : '';
+        } catch (err) {
+            // If the model doesn't support the 'temperature' value, retry without it or with default
+            const errData = err.response && err.response.data ? err.response.data : null;
+            if (errData && errData.error && errData.error.code === 'unsupported_value' && errData.error.param === 'temperature') {
+                console.warn('Model rejected temperature value, retrying without temperature...');
+                // remove temperature and retry
+                const fallbackBody = { ...requestBody };
+                delete fallbackBody.temperature;
+
+                try {
+                    const retryResp = await axios.post('https://api.openai.com/v1/chat/completions', fallbackBody, {
+                        headers: {
+                            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const completion = retryResp.data;
+                    return completion.choices && completion.choices[0] && completion.choices[0].message
+                        ? completion.choices[0].message.content
+                        : '';
+                } catch (retryErr) {
+                    console.error('Retry after removing temperature failed:', retryErr.response ? retryErr.response.data : retryErr.message || retryErr);
+                    throw retryErr;
+                }
+            }
+
+            // rethrow original error to be handled by outer catch
+            throw err;
+        }
         
     } catch (error) {
         // Improved error logging to see API response

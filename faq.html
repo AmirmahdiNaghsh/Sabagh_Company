@@ -187,9 +187,7 @@
             
             addMessage(question, 'user');
             input.value = '';
-            
             showLoading();
-            
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
@@ -201,15 +199,23 @@
                         siteUrl: window.location.origin
                     })
                 });
-                
-                const data = await response.json();
-                hideLoading();
-                addMessage(data.answer, 'bot');
-                
+
+                let data = null;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    console.error('Invalid JSON response from API', e);
+                }
+
+                // Ensure we always have a string to display
+                const botText = (data && data.answer) ? data.answer : 'متأسفانه در حال حاضر پاسخ موجود نیست. لطفاً دوباره تلاش کنید.';
+                addMessage(botText, 'bot');
+
             } catch (error) {
-                hideLoading();
+                console.error('Fetch Error:', error);
                 addMessage('متأسفانه مشکلی پیش آمد. لطفاً دوباره تلاش کنید.', 'bot');
-                console.error('Error:', error);
+            } finally {
+                hideLoading();
             }
         }
         
@@ -219,10 +225,11 @@
             messageDiv.className = `message ${sender}-message`;
             
             const avatar = sender === 'user' ? '👤' : '🤖';
-            
+            // guard against null/undefined text
+            const safeText = (typeof text === 'string' || typeof text === 'number') ? String(text) : '';
             messageDiv.innerHTML = `
                 <div class="message-avatar">${avatar}</div>
-                <div class="message-content">${text.replace(/\n/g, '<br>')}</div>
+                <div class="message-content">${safeText.replace(/\n/g, '<br>')}</div>
             `;
             
             messagesArea.appendChild(messageDiv);

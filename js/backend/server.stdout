@@ -1,0 +1,14 @@
+
+> sabagh-company@1.0.0 start
+> node server.js
+
+✅ Server running on http://localhost:3000
+📱 Website: http://localhost:3000/index.html
+🤖 AI Assistant: http://localhost:3000/faq.html
+General question detected, using ChatGPT...
+Site-related question, searching content...
+Updating site content cache...
+Crawled: index.html
+Crawled: products.html
+Crawled: about.html
+Crawled: contact.html
