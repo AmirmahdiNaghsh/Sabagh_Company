@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دستیار هوشمند - نوآوران دیجیتال</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Additional styles for chat page */
+        .chat-page {
+            min-height: calc(100vh - 70px);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .chat-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .messages-area {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            display: flex;
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s;
+        }
+        
+        .user-message {
+            flex-direction: row-reverse;
+        }
+        
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 0 10px;
+            background: #667eea;
+        }
+        
+        .user-message .message-avatar {
+            background: #4CAF50;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .user-message .message-content {
+            background: #667eea;
+            color: white;
+        }
+        
+        .input-area {
+            display: flex;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        #user-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            resize: none;
+            font-family: inherit;
+        }
+        
+        #send-btn {
+            margin-left: 10px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <span>🚀</span>
+                <h2>نوآوران دیجیتال</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">صفحه اصلی</a></li>
+                <li><a href="products.html">محصولات</a></li>
+                <li><a href="about.html">درباره ما</a></li>
+                <li><a href="contact.html">تماس با ما</a></li>
+                <li><a href="faq.html" class="btn-ai active">🤖 دستیار هوشمند</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="chat-page">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>🤖 دستیار هوشمند نوآوران دیجیتال</h2>
+                <p>هر سوالی دارید بپرسید - از محصولات ما تا هر موضوع دیگری!</p>
+            </div>
+            
+            <div id="chat-messages" class="messages-area">
+                <div class="message bot-message">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">
+                        سلام! من دستیار هوشمند شرکت نوآوران دیجیتال هستم. 
+                        می‌تونم در مورد محصولات، خدمات و هر سوال دیگه‌ای که دارید کمکتون کنم.
+                        چطور می‌تونم کمکتون کنم؟
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <textarea 
+                    id="user-input" 
+                    placeholder="سوال خود را بنویسید... (مثلا: محصولات شما چیست؟ یا هوا امروز چطوره؟)"
+                    rows="2"
+                ></textarea>
+                <button id="send-btn" onclick="sendQuestion()">ارسال</button>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 15px; margin-top: 20px; max-width: 900px; margin: 20px auto;">
+            <h3 style="margin-bottom: 15px;">نمونه سوالات:</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <button class="chip" onclick="askQuestion('سلام! خوبی؟')">سلام</button>
+                <button class="chip" onclick="askQuestion('محصولات شما چیست؟')">محصولات</button>
+                <button class="chip" onclick="askQuestion('قیمت نرم‌افزار حسابداری')">قیمت‌ها</button>
+                <button class="chip" onclick="askQuestion('نحوه ثبت سفارش')">ثبت سفارش</button>
+                <button class="chip" onclick="askQuestion('هوا امروز چطوره؟')">هوا</button>
+                <button class="chip" onclick="askQuestion('پایتخت فرانسه کجاست؟')">سوال عمومی</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_ENDPOINT = 'http://localhost:3000/api/faq-search';
+        
+        async function sendQuestion() {
+            const input = document.getElementById('user-input');
+            const question = input.value.trim();
+            
+            if (!question) return;
+            
+            addMessage(question, 'user');
+            input.value = '';
+            
+            showLoading();
+            
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        siteUrl: window.location.origin
+                    })
+                });
+                
+                const data = await response.json();
+                hideLoading();
+                addMessage(data.answer, 'bot');
+                
+            } catch (error) {
+                hideLoading();
+                addMessage('متأسفانه مشکلی پیش آمد. لطفاً دوباره تلاش کنید.', 'bot');
+                console.error('Error:', error);
+            }
+        }
+        
+        function addMessage(text, sender) {
+            const messagesArea = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            const avatar = sender === 'user' ? '👤' : '🤖';
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">${text.replace(/\n/g, '<br>')}</div>
+            `;
+            
+            messagesArea.appendChild(messageDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+        
+        function showLoading() {
+            const messagesArea = document.getElementById('chat-messages');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message bot-message';
+            loadingDiv.id = 'loading-message';
+            
+            loadingDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <div class="loading"></div>
+                    در حال فکر کردن...
+                </div>
+            `;
+            
+            messagesArea.appendChild(loadingDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+        
+        function hideLoading() {
+            const loadingMessage = document.getElementById('loading-message');
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
+        }
+        
+        function askQuestion(question) {
+            document.getElementById('user-input').value = question;
+            sendQuestion();
+        }
+        
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendQuestion();
+            }
+        });
+    </script>
+</body>
+</html>
